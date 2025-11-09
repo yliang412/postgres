@@ -193,6 +193,10 @@ InstrAggNode(Instrumentation *dst, Instrumentation *add)
 
 	if (dst->need_walusage)
 		WalUsageAdd(&dst->walusage, &add->walusage);
+
+	for (int i = 0; i < MAX_QUALS; ++i) {
+		dst->per_qual_filtered[i] += add->per_qual_filtered[i];
+	}
 }
 
 /* note current values during parallel executor startup */

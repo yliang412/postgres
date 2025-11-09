@@ -72,6 +72,10 @@
 #define EXEC_FLAG_WITH_NO_DATA		0x0040	/* REFRESH ... WITH NO DATA */
 
 
+/* / Hook for plguins to get control in ExecInitQual() */
+typedef ExprState *(*ExecInitQual_hook_type) (List *qual, PlanState *parent);
+extern PGDLLIMPORT ExecInitQual_hook_type ExecInitQual_hook;
+
 /* Hook for plugins to get control in ExecutorStart() */
 typedef void (*ExecutorStart_hook_type) (QueryDesc *queryDesc, int eflags);
 extern PGDLLIMPORT ExecutorStart_hook_type ExecutorStart_hook;
@@ -326,6 +330,7 @@ ExecProcNode(PlanState *node)
 extern ExprState *ExecInitExpr(Expr *node, PlanState *parent);
 extern ExprState *ExecInitExprWithParams(Expr *node, ParamListInfo ext_params);
 extern ExprState *ExecInitQual(List *qual, PlanState *parent);
+extern ExprState *standard_ExecInitQual(List *qual, PlanState *parent);
 extern ExprState *ExecInitCheck(List *qual, PlanState *parent);
 extern List *ExecInitExprList(List *nodes, PlanState *parent);
 extern ExprState *ExecBuildAggTrans(AggState *aggstate, struct AggStatePerPhaseData *phase,

@@ -64,8 +64,11 @@ typedef enum InstrumentOption
 	INSTRUMENT_BUFFERS = 1 << 1,	/* needs buffer usage */
 	INSTRUMENT_ROWS = 1 << 2,	/* needs row count */
 	INSTRUMENT_WAL = 1 << 3,	/* needs WAL usage */
+	INSTRUMENT_PER_QUAL = 1 << 4,
 	INSTRUMENT_ALL = PG_INT32_MAX
 } InstrumentOption;
+
+#define MAX_QUALS (16)
 
 typedef struct Instrumentation
 {
@@ -92,6 +95,8 @@ typedef struct Instrumentation
 	double		nfiltered2;		/* # of tuples removed by "other" quals */
 	BufferUsage bufusage;		/* total buffer usage */
 	WalUsage	walusage;		/* total WAL usage */
+	double  	per_qual_filtered[MAX_QUALS];	/* # of tuples removed per qual */
+
 } Instrumentation;
 
 typedef struct WorkerInstrumentation

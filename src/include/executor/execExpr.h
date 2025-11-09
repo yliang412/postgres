@@ -835,6 +835,9 @@ typedef struct JsonConstructorExprState
 
 /* functions in execExpr.c */
 extern void ExprEvalPushStep(ExprState *es, const ExprEvalStep *s);
+extern void ExecCreateExprSetupSteps(ExprState *state, Node *node);
+extern void ExecInitExprRec(Expr *node, ExprState *state,
+							Datum *resv, bool *resnull);
 
 /* functions in execExprInterp.c */
 extern void ExecReadyInterpretedExpr(ExprState *state);

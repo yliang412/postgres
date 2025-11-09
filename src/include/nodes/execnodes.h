@@ -1277,6 +1277,12 @@ typedef struct PlanState
 			((PlanState *)(node))->instrument->nfiltered2 += (delta); \
 	} while(0)
 
+#define InstrRecordPerQualFiltered(node, index, delta) \
+	do { \
+		if (((PlanState *)(node))->instrument) \
+			((PlanState *)(node))->instrument->per_qual_filtered[(index)] += (delta); \
+	} while(0)
+
 /*
  * EPQState is state for executing an EvalPlanQual recheck on a candidate
  * tuples e.g. in ModifyTable or LockRows.

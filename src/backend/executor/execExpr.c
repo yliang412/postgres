@@ -29,6 +29,8 @@
  *-------------------------------------------------------------------------
  */
 #include "postgres.h"
+#include "nodes/print.h"
+#include "commands/explain_state.h"
 
 #include "access/nbtree.h"
 #include "catalog/objectaccess.h"
@@ -47,6 +49,7 @@
 #include "utils/acl.h"
 #include "utils/array.h"
 #include "utils/builtins.h"
+#include "utils/guc.h"
 #include "utils/jsonfuncs.h"
 #include "utils/jsonpath.h"
 #include "utils/lsyscache.h"
@@ -69,15 +72,12 @@ typedef struct ExprSetupInfo
 } ExprSetupInfo;
 
 static void ExecReadyExpr(ExprState *state);
-static void ExecInitExprRec(Expr *node, ExprState *state,
-							Datum *resv, bool *resnull);
 static void ExecInitFunc(ExprEvalStep *scratch, Expr *node, List *args,
 						 Oid funcid, Oid inputcollid,
 						 ExprState *state);
 static void ExecInitSubPlanExpr(SubPlan *subplan,
 								ExprState *state,
 								Datum *resv, bool *resnull);
-static void ExecCreateExprSetupSteps(ExprState *state, Node *node);
 static void ExecPushExprSetupSteps(ExprState *state, ExprSetupInfo *info);
 static bool expr_setup_walker(Node *node, ExprSetupInfo *info);
 static bool ExecComputeSlotInfo(ExprState *state, ExprEvalStep *op);
@@ -207,6 +207,10 @@ ExecInitExprWithParams(Expr *node, ParamListInfo ext_params)
 	return state;
 }
 
+/* / Hook for plugins to get control for `ExecInitQual`  */
+ExecInitQual_hook_type ExecInitQual_hook = NULL;
+
+
 /*
  * ExecInitQual: prepare a qual for execution by ExecQual
  *
@@ -227,6 +231,25 @@ ExecInitExprWithParams(Expr *node, ParamListInfo ext_params)
  */
 ExprState *
 ExecInitQual(List *qual, PlanState *parent)
+{
+	if (ExecInitQual_hook != NULL)
+	{
+		return ExecInitQual_hook(qual, parent);
+	}
+	else
+	{
+		ExprState  *result;
+
+		elog(LOG, "standard_ExecInitQual");
+		result = standard_ExecInitQual(qual, parent);
+		return result;
+	}
+}
+
+
+/* The standard ExecInitQual procedure. */
+ExprState *
+standard_ExecInitQual(List *qual, PlanState *parent)
 {
 	ExprState  *state;
 	ExprEvalStep scratch = {0};
@@ -915,7 +938,7 @@ ExecReadyExpr(ExprState *state)
  * state - ExprState to whose ->steps to append the necessary operations
  * resv / resnull - where to store the result of the node into
  */
-static void
+void
 ExecInitExprRec(Expr *node, ExprState *state,
 				Datum *resv, bool *resnull)
 {
@@ -2877,7 +2900,7 @@ ExecInitSubPlanExpr(SubPlan *subplan,
  * Add expression steps performing setup that's needed before any of the
  * main execution of the expression.
  */
-static void
+void
 ExecCreateExprSetupSteps(ExprState *state, Node *node)
 {
 	ExprSetupInfo info = {0, 0, 0, 0, 0, NIL};

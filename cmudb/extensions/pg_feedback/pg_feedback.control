@@ -1,0 +1,5 @@
+# pg_feedback extension
+comment = 'pg_feedback'
+default_version = '0.0.1'
+relocatable = true
+module_pathname = '$libdir/pg_feedback'

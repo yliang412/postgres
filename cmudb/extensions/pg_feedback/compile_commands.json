@@ -1,0 +1,40 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/cc",
+      "-fno-strict-aliasing",
+      "-fwrapv",
+      "-fexcess-precision=standard",
+      "-Wall",
+      "-g",
+      "-O0",
+      "-Wmissing-prototypes",
+      "-Wpointer-arith",
+      "-Werror=vla",
+      "-Wendif-labels",
+      "-Wmissing-format-attribute",
+      "-Wimplicit-fallthrough=3",
+      "-Wcast-function-type",
+      "-Wshadow=compatible-local",
+      "-Wformat-security",
+      "-Wdeclaration-after-statement",
+      "-Wno-format-truncation",
+      "-Wno-stringop-truncation",
+      "-fPIC",
+      "-fvisibility=hidden",
+      "-std=gnu11",
+      "-I.",
+      "-I./",
+      "-I/home/liangyc/postgres/cmudb/pg-install/include/server",
+      "-I/home/liangyc/postgres/cmudb/pg-install/include/internal",
+      "-D_GNU_SOURCE",
+      "-c",
+      "-o",
+      "pg_feedback.o",
+      "pg_feedback.c"
+    ],
+    "directory": "/home/liangyc/postgres/cmudb/extensions/pg_feedback",
+    "file": "/home/liangyc/postgres/cmudb/extensions/pg_feedback/pg_feedback.c",
+    "output": "/home/liangyc/postgres/cmudb/extensions/pg_feedback/pg_feedback.o"
+  }
+]
