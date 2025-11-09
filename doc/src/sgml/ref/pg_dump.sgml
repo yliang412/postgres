@@ -297,8 +297,8 @@ PostgreSQL documentation
         file based output formats, in which case the standard output is used.
         It must be given for the directory output format however, where it
         specifies the target directory instead of a file. In this case the
-        directory is created by <command>pg_dump</command> and must not exist
-        before.
+        directory is created by <command>pg_dump</command> unless the directory
+        exist and is empty.
        </para>
       </listitem>
      </varlistentry>
@@ -1878,7 +1878,7 @@ CREATE DATABASE foo WITH TEMPLATE template0;
 
   <para>
    To dump all tables whose names start with <literal>mytable</literal>, except
-   for table <literal>mytable2</literal>, specify a filter file
+   for table <structname>mytable2</structname>, specify a filter file
    <filename>filter.txt</filename> like:
 <programlisting>
 include table mytable*
