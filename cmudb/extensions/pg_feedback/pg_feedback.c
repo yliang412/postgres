@@ -52,7 +52,6 @@ static Datum pg_feedback_evalfunc(ExprState *state, ExprContext *econtext, bool 
 	private->evaluate_with_instr = state->evalfunc;
 	state->evalfunc_private = private;
 	state->evalfunc = pg_feedback_evalfunc;
-	*isnull = false;
 	return	BoolGetDatum(qual_index == 0);
 }
 
