@@ -239,8 +239,6 @@ ExecInitQual(List *qual, PlanState *parent)
 	else
 	{
 		ExprState  *result;
-
-		elog(LOG, "standard_ExecInitQual");
 		result = standard_ExecInitQual(qual, parent);
 		return result;
 	}

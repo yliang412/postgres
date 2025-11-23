@@ -15,7 +15,7 @@ POSTGRES_PORT=15799
 
 
 echo "You may want to comment out the configure step if you're not regularly switching between debug and release."
-meson setup "$BUILD_DIR" --buildtype=debug --prefix "$INSTALL_DIR"
+meson setup "$BUILD_DIR" --buildtype=release --prefix "$INSTALL_DIR" -Dllvm=enabled
 cd $BUILD_DIR
 ninja && ninja install
 cd "$ROOT_DIR"

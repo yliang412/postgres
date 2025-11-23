@@ -6,8 +6,7 @@
       "-fwrapv",
       "-fexcess-precision=standard",
       "-Wall",
-      "-g",
-      "-O0",
+      "-O3",
       "-Wmissing-prototypes",
       "-Wpointer-arith",
       "-Werror=vla",
@@ -36,5 +35,25 @@
     "directory": "/home/liangyc/postgres/cmudb/extensions/pg_feedback",
     "file": "/home/liangyc/postgres/cmudb/extensions/pg_feedback/pg_feedback.c",
     "output": "/home/liangyc/postgres/cmudb/extensions/pg_feedback/pg_feedback.o"
+  },
+  {
+    "arguments": [
+      "/usr/lib/llvm-18/bin/clang",
+      "-Wno-ignored-attributes",
+      "-I.",
+      "-I./",
+      "-I/home/liangyc/postgres/cmudb/pg-install/include/server",
+      "-I/home/liangyc/postgres/cmudb/pg-install/include/internal",
+      "-D_GNU_SOURCE",
+      "-flto=thin",
+      "-emit-llvm",
+      "-c",
+      "-o",
+      "pg_feedback.bc",
+      "pg_feedback.c"
+    ],
+    "directory": "/home/liangyc/postgres/cmudb/extensions/pg_feedback",
+    "file": "/home/liangyc/postgres/cmudb/extensions/pg_feedback/pg_feedback.c",
+    "output": "/home/liangyc/postgres/cmudb/extensions/pg_feedback/pg_feedback.bc"
   }
 ]

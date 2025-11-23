@@ -19,4 +19,5 @@ if ! PGPASSWORD=${POSTGRES_PASSWORD} "${BIN_DIR}"/psql -U ${POSTGRES_USER} -d ${
 
 	PGPASSWORD=${POSTGRES_PASSWORD} "${BIN_DIR}"/psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -p ${POSTGRES_PORT} --echo-all -f ./cmudb/env/example.sql
 fi
-PGPASSWORD=${POSTGRES_PASSWORD} "${BIN_DIR}"/psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -p ${POSTGRES_PORT}
+PGPASSWORD=${POSTGRES_PASSWORD} "${BIN_DIR}"/psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -p ${POSTGRES_PORT} 
+# -XqAt -f ./cmudb/env/explain.sql > fine.json

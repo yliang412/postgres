@@ -17,52 +17,60 @@ PG_MODULE_MAGIC;
 
 extern PGDLLEXPORT void		_PG_init(void);
 
+/// Registers the previous `ExecInitQual` hook.
 static ExecInitQual_hook_type prev_ExecInitQual_hook = NULL;
+/// Registers the previous `prev_explain_per_node_hook` hook.
 static explain_per_node_hook_type prev_explain_per_node_hook = NULL;
 
 static bool pg_feedback_enabled = false;
 
 
-typedef struct pg_feedback_EvalFuncPrivate {
-	void 	*prev_private;
-	ExprStateEvalFunc prev_evalfunc;
-} pg_feedback_EvalFuncPrivate;
+typedef struct pg_feedback_EvalFuncWithInstr {
+	/// Previous private state of the evaluate function.
+	void 	*private_state;
+	/// Previous registered evaulate function.
+	ExprStateEvalFunc evaluate_with_instr;
+} pg_feedback_EvalFuncWithInstr;
 
-
+/// Execute the instrumented evaluate function, then extract results.
+/// See `pg_feedback_ExecInitQual` for how the predicate evaluation function is instrumented.
 static Datum pg_feedback_evalfunc(ExprState *state, ExprContext *econtext, bool *isnull) {
-	Datum d;
+	Datum result;
 	int qual_index;
-	pg_feedback_EvalFuncPrivate *private = state->evalfunc_private;
-	state->evalfunc_private = private->prev_private;
-	d = private->prev_evalfunc(state, econtext, isnull);
-	qual_index = DatumGetInt32(d);
+	pg_feedback_EvalFuncWithInstr *private = state->evalfunc_private;
+	state->evalfunc_private = private->private_state;
+	state->evalfunc = private->evaluate_with_instr;
 
+	result = state->evalfunc(state, econtext, isnull);
+	qual_index = DatumGetInt32(result);
+
+	if (qual_index > 0 && state->parent)  {
+		// Record instrumentation count.
+		InstrRecordPerQualFiltered(state->parent, Min(qual_index, MAX_QUALS) - 1, 1);
+	} 
+	private->private_state = state->evalfunc_private;
+	private->evaluate_with_instr = state->evalfunc;
 	state->evalfunc_private = private;
 	state->evalfunc = pg_feedback_evalfunc;
-	if (qual_index == 0)  {
-		return BoolGetDatum(true);
-	} else {
-		if (state->parent) {
-			InstrRecordPerQualFiltered(state->parent, Min(qual_index, MAX_QUALS) - 1, 1);
-		}
-		return BoolGetDatum(false);
-	}
-	
+	*isnull = false;
+	return	BoolGetDatum(qual_index == 0);
 }
 
+/// The instrumented evaluation function returns the index of the predicate
+/// in the conjunctive clause if 
 static ExprState *
 pg_feedback_ExecInitQual(List *qual, PlanState *parent) {
 	ExprState  *state;
 	ExprEvalStep scratch = {0};
 	List	   *adjust_jumps = NIL;
 	int qual_index = 0;
-	pg_feedback_EvalFuncPrivate *private;
+	pg_feedback_EvalFuncWithInstr *private;
 
 	if (!pg_feedback_enabled || parent == NULL) {
+    	elog(LOG, "[pg_feedback_ExecInitQual] -- use standard_ExecInitQual");
 		return standard_ExecInitQual(qual, parent);
 	}
 
-    elog(LOG, "pg_feedback_ExecInitQual:");
 	/* short-circuit (here and in ExecQual) for empty restriction list */
 	if (qual == NIL)
 		return NULL;
@@ -123,7 +131,7 @@ pg_feedback_ExecInitQual(List *qual, PlanState *parent) {
 	ExprEvalPushStep(state, &scratch);
 	Assert(qual_index == 0 && "`qual_index` should be zero at the end");
 
-	/* adjust jump targets */
+	// adjust jump targets
 	foreach_int(jump, adjust_jumps)
 	{
 		ExprEvalStep *as = &state->steps[jump];
@@ -141,15 +149,16 @@ pg_feedback_ExecInitQual(List *qual, PlanState *parent) {
 	}
 	
 	
-	private = palloc(sizeof(pg_feedback_EvalFuncPrivate));
+	private = palloc(sizeof(pg_feedback_EvalFuncWithInstr));
 	if (!jit_compile_expr(state)) {
-		      // intepret if not able to jit compile
+		// intepret if not able to jit compile
         ExecReadyInterpretedExpr(state);
     }
-	private->prev_evalfunc = state->evalfunc;
-	private->prev_private = state->evalfunc_private;
+	private->evaluate_with_instr = state->evalfunc;
+	private->private_state = state->evalfunc_private;
 	state->evalfunc = pg_feedback_evalfunc;
 	state->evalfunc_private = private;
+    elog(LOG, "[pg_feedback_ExecInitQual] -- instrumented");
 	return state;
 }
 
@@ -159,7 +168,7 @@ show_per_qual_filtered_count(PlanState *planstate, List *ancestors, ExplainState
 	double		nfiltered = 0;
 	double		nloops;
 	List 		*qual_display = NIL;
-	Expr * expr;
+	// Expr * expr;
 	Instrumentation *instr;
 	int qual_index = 0;
 	List	   *context;
@@ -173,20 +182,20 @@ show_per_qual_filtered_count(PlanState *planstate, List *ancestors, ExplainState
 	
 	nloops = planstate->instrument->nloops;
 
-	ExplainOpenGroup("Rows Removed by Each Qual", NULL, true, es);
+	ExplainOpenGroup("Rows Removed at each Qual Step", "Rows Removed at each Qual Step", true, es);
 	if (es->format == EXPLAIN_FORMAT_TEXT)
 	{
 		ExplainIndentText(es);
-		appendStringInfoString(es->str, "Rows Removed by Each Qual:\n");
+		appendStringInfoString(es->str, "Rows Removed at each Qual Step:\n");
 		es->indent++;
 	}
 	
 	foreach_ptr(Expr, node, planstate->plan->qual)
 	{
-		nfiltered += instr->per_qual_filtered[qual_index];
+		nfiltered = instr->per_qual_filtered[qual_index];
 		qual_index += 1;
 		qual_display = lappend(qual_display, node);
-		expr = make_ands_explicit(qual_display);
+		// expr = make_ands_explicit(qual_display);
 
 	
 
@@ -204,7 +213,7 @@ show_per_qual_filtered_count(PlanState *planstate, List *ancestors, ExplainState
 		}
 	}
 	
-	ExplainCloseGroup("Rows Removed by Each Qual", "Rows Removed by Each Qual", true, es);
+	ExplainCloseGroup("Rows Removed at each Qual Step", "Rows Removed at each Qual Step", true, es);
 }
 
 static void pg_feedback_explain_per_node(PlanState *planstate,
@@ -215,7 +224,9 @@ static void pg_feedback_explain_per_node(PlanState *planstate,
 	if (prev_explain_per_node_hook) {
 		prev_explain_per_node_hook(planstate, ancestors, relationship, plan_name, es);
 	} 
-	show_per_qual_filtered_count(planstate, ancestors, es);
+	if (pg_feedback_enabled) {
+		show_per_qual_filtered_count(planstate, ancestors, es);
+	}
 }
 
 void _PG_init(void) {
