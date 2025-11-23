@@ -1234,7 +1234,7 @@ include_dir 'conf.d'
       </term>
       <listitem>
        <para>
-        The library/libraries to use for validating OAuth connection tokens. If
+        Sets the library/libraries to use for validating OAuth connection tokens. If
         only one validator library is provided, it will be used by default for
         any OAuth connections; otherwise, all
         <link linkend="auth-oauth"><literal>oauth</literal> HBA entries</link>
@@ -1400,7 +1400,7 @@ include_dir 'conf.d'
        <para>
         Specifies a list of cipher suites that are allowed by connections using
         <acronym>TLS</acronym> version 1.3.  Multiple cipher suites can be
-        specified by using a colon separated list. If left blank, the default
+        specified by using a colon-separated list. If left blank, the default
         set of cipher suites in <productname>OpenSSL</productname> will be used.
        </para>
 
@@ -2436,8 +2436,8 @@ include_dir 'conf.d'
       </term>
       <listitem>
        <para>
-        Sets the maximum number of open files each server subprocess is
-        allowed to open simultaneously;  files already opened in the
+        Sets the maximum number of files each server subprocess is
+        allowed to have open simultaneously;  files already opened in the
         postmaster are not counted toward this limit. The default is one
         thousand files.
        </para>
@@ -4059,7 +4059,7 @@ include_dir 'conf.d'
         names that are not present in the archive; it must return nonzero
         when so asked.  Examples:
 <programlisting>
-restore_command = 'cp /mnt/server/archivedir/%f "%p"'
+restore_command = 'cp "/mnt/server/archivedir/%f" "%p"'
 restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
 </programlisting>
         An exception is that if the command was terminated by a signal (other
@@ -4098,7 +4098,7 @@ restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
         The <xref linkend="pgarchivecleanup"/> module
         is often used in <varname>archive_cleanup_command</varname> for
         single-standby configurations, for example:
-<programlisting>archive_cleanup_command = 'pg_archivecleanup /mnt/server/archivedir %r'</programlisting>
+<programlisting>archive_cleanup_command = 'pg_archivecleanup /mnt/server/archivedir "%r"'</programlisting>
         Note however that if multiple standby servers are restoring from the
         same archive directory, you will need to ensure that you do not delete
         WAL files until they are no longer needed by any of the servers.
@@ -5199,8 +5199,8 @@ ANY <replaceable class="parameter">num_sync</replaceable> ( <replaceable class="
        </para>
        <para>
         In logical replication, this parameter also limits how often a failing
-        replication apply worker or table synchronization worker will be
-        respawned.
+        replication apply worker or table/sequence synchronization worker will
+        be respawned.
        </para>
       </listitem>
      </varlistentry>
@@ -5341,8 +5341,8 @@ ANY <replaceable class="parameter">num_sync</replaceable> ( <replaceable class="
       <listitem>
        <para>
         Specifies maximum number of logical replication workers. This includes
-        leader apply workers, parallel apply workers, and table synchronization
-        workers.
+        leader apply workers, parallel apply workers, and table/sequence
+        synchronization workers.
        </para>
        <para>
         Logical replication workers are taken from the pool defined by
@@ -5365,10 +5365,14 @@ ANY <replaceable class="parameter">num_sync</replaceable> ( <replaceable class="
        <para>
         Maximum number of synchronization workers per subscription. This
         parameter controls the amount of parallelism of the initial data copy
-        during the subscription initialization or when new tables are added.
+        for tables during the subscription initialization or when new tables
+        are added. One additional worker is also needed for sequence
+        synchronization.
        </para>
        <para>
-        Currently, there can be only one synchronization worker per table.
+        Currently, there can be only one table synchronization worker per table
+        and one sequence synchronization worker to synchronize per
+        subscription.
        </para>
        <para>
         The synchronization workers are taken from the pool defined by

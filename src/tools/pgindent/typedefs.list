@@ -1649,6 +1649,9 @@ LtreeGistOptions
 LtreeSignature
 MAGIC
 MBuf
+MCVHashContext
+MCVHashEntry
+MCVHashTable_hash
 MCVItem
 MCVList
 MEMORY_BASIC_INFORMATION
@@ -2345,6 +2348,7 @@ ProjectionPath
 PromptInterruptContext
 ProtocolVersion
 PrsStorage
+PruneFreezeParams
 PruneFreezeResult
 PruneReason
 PruneState
@@ -2913,6 +2917,7 @@ SubscriptionRelState
 SummarizerReadLocalXLogPrivate
 SupportRequestCost
 SupportRequestIndexCondition
+SupportRequestInlineInFrom
 SupportRequestModifyInPlace
 SupportRequestOptimizeWindowClause
 SupportRequestRows
@@ -3739,6 +3744,8 @@ int64_t
 int8
 int8_t
 int8x16_t
+int_fast32_t
+int_fast64_t
 internalPQconninfoOption
 intptr_t
 intset_internal_node
@@ -3860,6 +3867,7 @@ pe_test_vector
 pendingPosition
 pending_label
 pgParameterStatus
+pgoff_t
 pg_atomic_flag
 pg_atomic_uint32
 pg_atomic_uint64
@@ -4133,7 +4141,7 @@ storeRes_func
 stream_stop_callback
 string
 substitute_actual_parameters_context
-substitute_actual_srf_parameters_context
+substitute_actual_parameters_in_from_context
 substitute_grouped_columns_context
 substitute_phv_relids_context
 subxids_array_status
@@ -4192,6 +4200,7 @@ uint64x2_t
 uint8
 uint8_t
 uint8x16_t
+uint_fast64_t
 uintptr_t
 unicodeStyleBorderFormat
 unicodeStyleColumnFormat
